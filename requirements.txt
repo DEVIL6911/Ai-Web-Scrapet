@@ -1,0 +1,11 @@
+streamlit
+selenium
+beautifulsoup4
+langchain
+langchain-core
+langchain-ollama
+requests
+html5lib
+lxml
+langchain-openai
+openai
