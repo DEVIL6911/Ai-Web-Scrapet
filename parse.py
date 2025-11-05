@@ -1,7 +1,7 @@
 import os
 import requests
 
-GEMINI_API_KEY = os.getenv("AIzaSyDS87MdLl5vWL6JuSvWZ7BMgU59L7qVzKQ")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 MODEL_ID = "gemini-2.5-flash"
 API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_ID}:generateContent"
 
@@ -47,3 +47,4 @@ def parse_with_gemini(dom_chunks, parse_description):
         result = call_gemini(prompt)
         results.append(result)
     return "\n".join(results)
+
