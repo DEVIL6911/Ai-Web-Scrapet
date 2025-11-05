@@ -1,87 +1,49 @@
-# file: parse_with_gemini.py
-
 import os
 import requests
-import json
 
-# --- Configuration ---
-GEMINI_API_KEY = os.getenv("AIzaSyDS87MdLl5vWL6JuSvWZ7BMgU59L7qVzKQ")  # Set this in your environment / secrets
-MODEL_ID = "gemini-2.5-flash"  # Using the Flash model as per docs. :contentReference[oaicite:3]{index=3}
-API_ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent".format(model=MODEL_ID)
+GEMINI_API_KEY = os.getenv("AIzaSyDS87MdLl5vWL6JuSvWZ7BMgU59L7qVzKQ")
+MODEL_ID = "gemini-2.5-flash"
+API_ENDPOINT = f"https://generativelanguage.googleapis.com/v1beta/models/{MODEL_ID}:generateContent"
 
-# --- Helpers ---
-def call_gemini(prompt_text: str, thinking_budget: int = None, max_output_tokens: int = 512) -> str:
-    """
-    Call the Gemini API and return the generated text.
-    :param prompt_text: The text prompt to send.
-    :param thinking_budget: Optional internal “thinking” budget (depending on model).
-    :param max_output_tokens: Maximum tokens to output.
-    :return: Generated text.
-    """
+def call_gemini(prompt_text, max_output_tokens=3000):
+    """Send prompt to Gemini API and return response text."""
+    if not GEMINI_API_KEY:
+        raise ValueError("GEMINI_API_KEY not set in environment or Streamlit secrets.")
+
     headers = {
         "Content-Type": "application/json",
-        "x-goog-api-key": GEMINI_API_KEY
+        "x-goog-api-key": GEMINI_API_KEY,
     }
-    body = {
+
+    payload = {
         "contents": [
-            {
-                "parts": [
-                    {
-                        "text": prompt_text
-                    }
-                ]
-            }
+            {"parts": [{"text": prompt_text}]}
         ],
         "generationConfig": {
             "maxOutputTokens": max_output_tokens
         }
     }
-    # If thinking_budget is supported by the model, include it
-    if thinking_budget is not None:
-        body["generationConfig"]["thinkingBudget"] = thinking_budget
 
-    response = requests.post(API_ENDPOINT, headers=headers, json=body)
+    response = requests.post(API_ENDPOINT, headers=headers, json=payload, timeout=60)
     response.raise_for_status()
     data = response.json()
-    # Depending on API version, the generated text might be under different fields:
-    # Example: data["candidates"][0]["output"] or data["candidates"][0]["text"]
     try:
-        return data["candidates"][0]["output"]
+        return data["candidates"][0]["content"]["parts"][0]["text"].strip()
     except KeyError:
-        return data["candidates"][0].get("text", "")
+        return ""
 
-# --- Integration with your parsing chain ---
-def parse_with_gemini(dom_chunks, parse_description: str) -> str:
-    """
-    Splits DOM chunks, calls Gemini for each chunk, and returns combined results.
-    :param dom_chunks: List of strings (chunks of DOM content).
-    :param parse_description: What to extract.
-    :return: Concatenated results.
-    """
+def parse_with_gemini(dom_chunks, parse_description):
+    """Extract specific info from webpage chunks using Gemini."""
     results = []
     for i, chunk in enumerate(dom_chunks, start=1):
         prompt = (
-            "You are tasked with extracting specific information from the following text content: {dom_content}. "
-            "Please follow these instructions carefully: \n\n"
-            "1. **Extract Information:** Only extract the information that directly matches the provided description: {parse_description}. "
-            "2. **No Extra Content:** Do not include any additional text, comments, or explanations in your response. "
-            "3. **Empty Response:** If no information matches the description, return an empty string ('')."
-        ).format(dom_content=chunk, parse_description=parse_description)
-
-        # You can optionally set a thinking budget for the model, e.g., 100 tokens
-        result = call_gemini(prompt, thinking_budget=100, max_output_tokens=3000)
-        print(f"Parsed batch: {i} of {len(dom_chunks)}")
-        results.append(result.strip())
-
+            f"You are tasked with extracting specific information from the following text content:\n\n{chunk}\n\n"
+            f"Please follow these instructions carefully:\n"
+            f"1. Extract only the information that matches this description: {parse_description}\n"
+            f"2. Do NOT include extra explanations or formatting.\n"
+            f"3. If no match is found, return an empty string ('')."
+        )
+        print(f"🔹 Processing batch {i}/{len(dom_chunks)}...")
+        result = call_gemini(prompt)
+        results.append(result)
     return "\n".join(results)
-
-# --- Example Usage ---
-if __name__ == "__main__":
-    # Example chunk list (in your real code replace this with actual split DOM content)
-    example_chunks = [
-        "Some HTML-extracted body content chunk #1 ...",
-        "Some HTML-extracted body content chunk #2 ..."
-    ]
-    description = "List all email addresses found in the content."
-    output = parse_with_gemini(example_chunks, description)
-    print("Parsed result:\n", output)
