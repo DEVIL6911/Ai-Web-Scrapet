@@ -1,0 +1,15 @@
+streamlit 
+langchain 
+langchain_ollama
+selenium
+beautifulsoup4
+lxml 
+html5lib
+python-dotenv
+
+// important link for this project
+Code In This Video: https://github.com/techwithtim/AI-Web...
+ChromeDriver Download: https://googlechromelabs.github.io/ch...
+Selenum Video Tutorial:    • Python Selenium Tutorial - Automate Websit...  
+Ollama Download Link: https://ollama.com/
+Ollama Github: https://github.com/ollama/ollama
