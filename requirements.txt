@@ -9,3 +9,12 @@ html5lib
 lxml
 langchain-openai
 openai
+streamlit
+beautifulsoup4
+requests
+langchain
+langchain-core
+langchain-ollama
+html5lib
+lxml
+
