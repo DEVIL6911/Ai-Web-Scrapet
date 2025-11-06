@@ -7,7 +7,7 @@ from scrape import (
 )
 from parse import parse_with_gemini
 
-st.title("AI Web Scraper Macro project Ayush BTMC24O1037 And Aneeka BTMC24O1025 ")
+st.title("AI Web Scraper")
 
 url = st.text_input("Enter Website URL")
 
@@ -41,6 +41,7 @@ if "dom_content" in st.session_state:
                 st.text_area("Parsed Result", parsed_result, height=300)
             except Exception as e:
                 st.error(f"Error parsing with Gemini: {e}")
+
 
 
 
